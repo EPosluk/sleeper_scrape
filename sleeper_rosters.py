@@ -12,7 +12,7 @@ def main():
     #       EXTRACT      #
     ######################
     # Get Players Data via Sleeper API
-    url = 'https://api.sleeper.app/v1/league/<league_id>/rosters'
+    url = 'https://api.sleeper.app/v1/league/1048244634536857600/rosters'
     response = requests.get(url)
 
 
