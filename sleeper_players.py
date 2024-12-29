@@ -6,7 +6,7 @@ def main():
     ######################
     #       SET UP       #
     ######################
-    
+
 
     ######################
     #       EXTRACT      #
@@ -31,6 +31,4 @@ def main():
     # Write players dataframe to postgres db
 
 
-url = 'https://api.sleeper.app/v1/players/nfl'
-response = requests.get(url)
 
