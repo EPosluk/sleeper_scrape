@@ -30,6 +30,6 @@ def main():
     ######################
     #        LOAD        #
     ######################
-    # Write players dataframe to postgres db
+    # Write matchups dataframe to postgres db
 
 
