@@ -21,7 +21,7 @@ def main():
                     'draft_id': BIGINT(),
                     'bracket_id': BIGINT(),
                     'loser_bracket_id': BIGINT()} # Subset of keys to extract
-    leagues_df = pd.DataFrame(columns=keys_subset) # Create empty dataframe with columns of interest
+    leagues_df = pd.DataFrame(columns=keys_subset.keys()) # Create empty dataframe with columns of interest
 
     for year in range(start_year, latest_year+1):
         ######################
