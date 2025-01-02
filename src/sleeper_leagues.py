@@ -3,6 +3,7 @@ import pandas as pd
 import psycopg
 import config
 from sqlalchemy import create_engine
+from sqlalchemy.types import INTEGER, VARCHAR, BIGINT
 
 def main():
     ######################
@@ -13,8 +14,13 @@ def main():
     original_league_id = 964039300688011264 # Original league ID by which to reference
     previous_league_id = None # Initialize previous years league ID to none
     start_year = 2023 # Year of the original league
-    latest_year = 2025 # Will update to get via query from sleeper_state table
-    keys_subset = ['season', 'name', 'league_id', 'draft_id', 'bracket_id', 'loser_bracket_id'] # Subset of keys to extract
+    latest_year = pd.read_sql_query('SELECT season FROM sleeper.sleeper_state', engine)['season'][0] # Query to get current NFL season
+    keys_subset = {'season': INTEGER(), 
+                    'name':  VARCHAR(length=255),
+                    'league_id': BIGINT(),
+                    'draft_id': BIGINT(),
+                    'bracket_id': BIGINT(),
+                    'loser_bracket_id': BIGINT()} # Subset of keys to extract
     leagues_df = pd.DataFrame(columns=keys_subset) # Create empty dataframe with columns of interest
 
     for year in range(start_year, latest_year+1):
@@ -31,7 +37,7 @@ def main():
                 #     TRANSFORM      #
                 ######################
                 # Get new row of data
-                league_id_row = pd.DataFrame([{k: league_year[k] for k in keys_subset}])
+                league_id_row = pd.DataFrame([{k: league_year[k] for k in keys_subset.keys()}])
                 # Append new row to dataframe
                 leagues_df = pd.concat([leagues_df, league_id_row], axis=0, ignore_index = True)
 
@@ -42,7 +48,8 @@ def main():
         #        LOAD        #
         ######################
         # Write leagues dataframe to postgres db
-        leagues_df.to_sql(name='sleeper_leagues', con=engine, schema = 'sleeper', if_exists = 'replace', index=False)
+        leagues_df.to_sql(name='sleeper_leagues', con=engine, schema = 'sleeper', if_exists = 'replace', index=False,
+                          dtype=keys_subset)
         engine.dispose()
 
 
