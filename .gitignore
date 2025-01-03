@@ -3,6 +3,7 @@ data/
 scrap.ipynb
 .DS_Store
 src/config.py
+config.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

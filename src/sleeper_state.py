@@ -3,7 +3,7 @@ import pandas as pd
 import psycopg
 import config
 from sqlalchemy import create_engine, Date
-from sqlalchemy.types import INTEGER, Float, VARCHAR
+from sqlalchemy.types import INTEGER, VARCHAR
 
 
 def main():
