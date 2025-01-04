@@ -29,8 +29,12 @@ def main():
                             'FLEX1': INTEGER(),
                             'FLEX2': INTEGER(),
                             'DEF': VARCHAR()}
+    player_points_subset = {'week': INTEGER(),
+                             'player_id': VARCHAR(),
+                             'player_points': FLOAT()}
     matchups_df = pd.DataFrame(columns=matchups_keys_subset.keys()) # Create empty dataframe for matchup data
     starters_df = pd.DataFrame(columns=starters_keys_subset.keys()) # Create empty dataframe for starters data
+    player_points_df = pd.DataFrame(columns = player_points_subset.keys()) # Create empty dataframe for player scoring
 
 
     for week in range(1,19):
@@ -49,8 +53,11 @@ def main():
             row_matchups_df = pd.DataFrame([{k: roster[k] for k in matchups_keys_subset.keys() if k in roster.keys()}])
             row_matchups_df['week'] = week
             row_starters_df = pd.DataFrame(data = [[roster['roster_id']] + [week] + roster['starters']], index = None, columns = starters_keys_subset.keys())
+            row_player_points_df = pd.DataFrame({'week': week, 'player_id': roster['players_points'].keys(), 'player_points': roster['players_points'].values()})
             matchups_df = pd.concat([matchups_df, row_matchups_df], axis=0, ignore_index = True)
             starters_df = pd.concat([starters_df, row_starters_df], axis=0, ignore_index = True)
+            player_points_df = pd.concat([player_points_df, row_player_points_df], 
+            axis=0, ignore_index = True)
     
 
     ######################
@@ -61,6 +68,8 @@ def main():
                           dtype=matchups_keys_subset)
     starters_df.to_sql(name='sleeper_starters', con=engine, schema = 'sleeper', if_exists = 'replace', index=False,
                           dtype=starters_keys_subset)
+    player_points_df.to_sql(name='sleeper_player_points', con=engine, schema = 'sleeper', if_exists = 'replace', index=False,
+                          dtype=player_points_subset)
     engine.dispose()
 
 
