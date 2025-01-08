@@ -37,8 +37,7 @@ def main():
         'player_id': VARCHAR(),
         'team': VARCHAR(),
         'number': INTEGER(),
-        'rookie_year': INTEGER()}
-    players_df = pd.DataFrame(columns=keys_subset.keys()) # Create empty dataframe with columns of interest
+        'rookie_year': VARCHAR()}
     
 
 
@@ -54,14 +53,14 @@ def main():
     #     TRANSFORM      #
     ######################
     # Flatten nested dictionary to a dataframe
-    for key, value in response.json().items():
-        temp_df = pd.DataFrame({k: v for k, v in value.items() if k in keys_subset.keys()})
-        if 'rookie_year' in value['metadata'].keys():
-            temp_df['rookie_year'] = value['metadata']['rookie_year']
-        players_df = pd.concat([players_df, temp_df], axis=0, ignore_index = True)
-
-    players_df = pd.DataFrame([{k: v for k, v in e.items() if k in keys_subset.keys()} for d, e in response.json().items()])
-    rookie_year_df = pd.DataFrame([{'rookie_year'}])
+    players_df = pd.DataFrame([
+        {
+            **(value if isinstance(value, dict) else {}),  # Ensure value is a dict
+            'rookie_year': value.get('metadata', {}).get('rookie_year') if isinstance(value, dict) and isinstance(value.get('metadata'), dict) else None  # Fully safe extraction
+        }
+        for key, value in response.json().items()
+    ])
+    players_df = players_df[keys_subset.keys()]
 
 
     ######################
