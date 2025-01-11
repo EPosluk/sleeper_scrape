@@ -80,6 +80,14 @@ def main():
     player_id_info = pd.read_sql_query(player_id_query, engine) # Query to get current NFL season
     latest_year = pd.read_sql_query('SELECT MAX(season) as season FROM sleeper.sleeper_state', engine)['season'][0] # Query to get current NFL season
     
+    # Check for existence of stats table
+    stats_table_check_query = '''SELECT EXISTS (
+                                SELECT 1
+                                FROM information_schema.tables
+                                WHERE table_name = 'sleeper_stats'
+                                ) AS table_existence;'''
+    stats_table_flag = pd.read_sql_query(stats_table_check_query, engine)['table_existence'][0]
+    
 
 
     ######################
