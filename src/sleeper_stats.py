@@ -88,6 +88,10 @@ def main():
                                 ) AS table_existence;'''
     stats_table_flag = pd.read_sql_query(stats_table_check_query, engine)['table_existence'][0]
     
+    if stats_table_flag == True:
+        # Check for existence of stats table
+        stats_table_query = '''SELECT DISTINCT player_id, year
+                                FROM sleeper.sleeper_stats;;'''
 
 
     ######################
