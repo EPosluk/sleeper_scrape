@@ -78,6 +78,7 @@ def main():
         ON a.player_id = sp.player_id
         '''
     player_id_info = pd.read_sql_query(player_id_query, engine) # Query to get current NFL season
+    player_stats = []
     latest_year = pd.read_sql_query('SELECT MAX(season) as season FROM sleeper.sleeper_state', engine)['season'][0] # Query to get current NFL season
     
     # Check for existence of stats table
@@ -91,7 +92,8 @@ def main():
     if stats_table_flag == True:
         # Check for existence of stats table
         stats_table_query = '''SELECT DISTINCT player_id, year
-                                FROM sleeper.sleeper_stats;;'''
+                                FROM sleeper.sleeper_stats;'''
+        
 
 
     ######################
@@ -102,6 +104,7 @@ def main():
         for season in range(player['rookie_year'], latest_year+1):
             print(player_id, season)
         break
+        time.sleep(1)
     url = 'https://api.sleeper.com/stats/nfl/player/' + str(player_id) '?season_type=regular&season=' + str(season) + '&grouping=week'
     response = requests.get(url)
     time.sleep()
