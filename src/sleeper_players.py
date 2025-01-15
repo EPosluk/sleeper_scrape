@@ -61,7 +61,7 @@ def main():
         for key, value in response.json().items()
     ])
     players_df = players_df[keys_subset.keys()]
-    players_df['rookie_year'] = pd.to_numeric(players_df['rookie_year'])
+    players_df['rookie_year'] = pd.to_numeric(players_df['rookie_year']) # Cast rookie year to numeric
 
 
     ######################
