@@ -37,7 +37,7 @@ def main():
         'player_id': VARCHAR(),
         'team': VARCHAR(),
         'number': INTEGER(),
-        'rookie_year': VARCHAR()}
+        'rookie_year': INTEGER()}
     
 
 
@@ -61,6 +61,7 @@ def main():
         for key, value in response.json().items()
     ])
     players_df = players_df[keys_subset.keys()]
+    players_df['rookie_year'] = pd.to_numeric(players_df['rookie_year'])
 
 
     ######################
