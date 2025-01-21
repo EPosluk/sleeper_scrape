@@ -2,7 +2,7 @@ import pandas as pd
 import requests 
 import psycopg
 import config
-from sqlalchemy import create_engine, Date
+from sqlalchemy import create_engine, Date, text
 from sqlalchemy.types import INTEGER, VARCHAR, BOOLEAN, FLOAT
 import time
 
@@ -78,8 +78,10 @@ def main():
         ON a.player_id = sp.player_id
         '''
     player_id_info = pd.read_sql_query(player_id_query, engine) # Query to get current NFL season
-    player_stats = []
-    latest_year = pd.read_sql_query('SELECT MAX(season) as season FROM sleeper.sleeper_state', engine)['season'][0] # Query to get current NFL season
+    with engine.connect() as con:
+        player_id_info = con.execute(text(player_id_query))
+        latest_year = list(con.execute(text('SELECT MAX(season) as season FROM sleeper.sleeper_state')))[0][0]
+
     
     # Check for existence of stats table
     stats_table_check_query = '''SELECT EXISTS (
@@ -93,6 +95,7 @@ def main():
         # Check for existence of stats table
         stats_table_query = '''SELECT DISTINCT player_id, year
                                 FROM sleeper.sleeper_stats;'''
+        
         
 
 
