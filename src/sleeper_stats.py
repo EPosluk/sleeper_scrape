@@ -59,28 +59,27 @@ def main():
         "game_id": VARCHAR(),
         "team": VARCHAR(),
         "opponent": VARCHAR()}
-    player_id = 5859; # Placeholder for player_id, this will be looped through from query of active players
-    season = 2024; #Placeholder for season, this will be looped through from rookie year to current season
     player_id_query = '''
-        select a.player_id, sp.rookie_year
+        select a.player_id, COALESCE(sp.years_exp,10)
         from 
-            (select player_id
-            from sleeper.sleeper_players
-            where team is not null 
-            and position in ('QB','RB','WR','TE','DEF') and 
-            depth_chart_position is not null
-            union 
-            select player_id
-            from sleeper.sleeper_player_points) a
+                (select player_id
+                from sleeper.sleeper_players
+                where team is not null 
+                and position in ('QB','RB','WR','TE','DEF') and 
+                depth_chart_position is not null
+                union 
+                select player_id
+                from sleeper.sleeper_player_points) a
         left join
-        (select player_id, rookie_year
+        (select player_id, years_exp
         from sleeper.sleeper_players) sp
         ON a.player_id = sp.player_id
         '''
-    player_id_info = pd.read_sql_query(player_id_query, engine) # Query to get current NFL season
     with engine.connect() as con:
         player_id_info = con.execute(text(player_id_query))
         latest_year = list(con.execute(text('SELECT MAX(season) as season FROM sleeper.sleeper_state')))[0][0]
+    
+    player_id_df = pd.DataFrame([d[0], year] for d in list(player_id_info) for year in range(d[1],int(latest_year)+1))
 
     
     # Check for existence of stats table
@@ -103,14 +102,17 @@ def main():
     #       EXTRACT      #
     ######################
     # Get Players Data via Sleeper API
-    for player in player_id_info.iterrows():
-        for season in range(player['rookie_year'], latest_year+1):
-            print(player_id, season)
-        break
-        time.sleep(1)
-    url = 'https://api.sleeper.com/stats/nfl/player/' + str(player_id) '?season_type=regular&season=' + str(season) + '&grouping=week'
-    response = requests.get(url)
-    time.sleep()
+    for player in player_id_df.iterrows():
+            years_exp = 0
+            for season in range(latest_year, 2015, -1):
+                    url = 'https://api.sleeper.com/stats/nfl/player/' + str(player[1][0]) + '?season_type=regular&season=' + str(season) + '&grouping=week'
+                    response = requests.get(url)
+                    print(response.json())
+                    if not all(response.json().values()):
+                        years_exp += 1
+                    if years_exp >= player_id_df[1][1]:
+                        break
+                    time.sleep(1)
 
     ######################
     #     TRANSFORM      #
