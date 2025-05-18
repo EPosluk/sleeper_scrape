@@ -12,7 +12,7 @@ def main():
     ######################
     # SQL Alchemy engine creation
     engine = create_engine(config.connection_string)
-    keys_subset = {'week': INTEGER(),
+    keys_subset = {
         'date': Date(),
         'bonus_rec_yd_100': INTEGER(),
         "pos_rank_std": INTEGER(),
@@ -51,14 +51,16 @@ def main():
         "rec_tgt": INTEGER(),
         "pts_ppr": FLOAT(),
         "rec_yd": FLOAT(),
-        "category": "stat",
+        "category": VARCHAR(),
         "week": INTEGER(),
         "season": VARCHAR(),
         "season_type": VARCHAR(),
-        "player_id": VARCHAR(),
+        "player_id": INTEGER(),
         "game_id": VARCHAR(),
         "team": VARCHAR(),
         "opponent": VARCHAR()}
+    stats_df = pd.DataFrame(columns=keys_subset.keys()) # Create empty dataframe for matchup data
+
     player_id_query = '''
         select a.player_id, COALESCE(sp.years_exp,10)
         from 
@@ -103,29 +105,38 @@ def main():
     ######################
     # Get Players Data via Sleeper API
     for player in player_id_df.iterrows():
-            years_exp = 0
-            for season in range(latest_year, 2015, -1):
-                    url = 'https://api.sleeper.com/stats/nfl/player/' + str(player[1][0]) + '?season_type=regular&season=' + str(season) + '&grouping=week'
-                    response = requests.get(url)
-                    print(response.json())
-                    if not all(response.json().values()):
-                        years_exp += 1
-                    if years_exp >= player_id_df[1][1]:
-                        break
-                    time.sleep(1)
+        print(player)
+        years_exp = 0
+        for season in range(latest_year, 2015, -1):
+            url = 'https://api.sleeper.com/stats/nfl/player/' + str(player[1][0]) + '?season_type=regular&season=' + str(season) + '&grouping=week'
+            response = requests.get(url)
+            #print(response.json())
+            if not all(response.json().values()):
+                years_exp += 1
+            if years_exp >= player_id_df[1][1]:
+                break
+            time.sleep(1)
 
-    ######################
-    #     TRANSFORM      #
-    ######################
-    # Flatten nested dictionary to a dataframe
-    players_df = pd.DataFrame([{k: v for k, v in e.items() if k in keys_subset.keys()} for d, e in response.json().items()])
+        ######################
+        #     TRANSFORM      #
+        ######################
+        # Flatten nested dictionary to a dataframe
+        #players_df = pd.DataFrame([{k: v for k, v in e.items() if k in keys_subset.keys()} for d, e in response.json().items()])
+        #row_player_points_df = pd.DataFrame({'week': week, 'player_id': roster['players_points'].keys(), 'player_points': roster['players_points'].values()})
+            for week in response.json().keys():
+                if response.json()[week] != None:
+                    metadata_dict = {k: response.json()[week][k] for k in keys_subset.keys() if k in response.json()[week].keys()}
+                    stats_dict = response.json()[week]['stats']
+                    row_df = pd.DataFrame([metadata_dict | stats_dict])
+                    stats_df = pd.concat([stats_df, row_df], axis=0, ignore_index = True)
+
 
 
     ######################
     #        LOAD        #
     ######################
     # Write players dataframe to postgres db
-    players_df.to_sql(name='sleeper_players', con=engine, schema = 'sleeper', if_exists = 'replace', index=False,
+    stats_df.to_sql(name='sleeper_stats', con=engine, schema = 'sleeper', if_exists = 'replace', index=False,
                 dtype=keys_subset)
     engine.dispose()
 

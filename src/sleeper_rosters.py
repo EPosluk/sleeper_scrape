@@ -1,11 +1,15 @@
 import requests
 import pandas as pd
-import json
+import psycopg
+import config
+from sqlalchemy import create_engine, Date
+from sqlalchemy.types import INTEGER, VARCHAR, BIGINT, VARCHAR, FLOAT
 
 def main():
     ######################
     #       SET UP       #
     ######################
+    engine = create_engine(config.connection_string)
     # Subsets of keys and child keys to extract
     keys_subset = ['league_id', 'players', 'reserve', 'roster_id', 'starters', 'taxi'] 
     metadata_subset = ['record', 'streak']
@@ -23,8 +27,7 @@ def main():
     #     TRANSFORM      #
     ######################
     # Flatten nested dictionary to a dataframe
-    json_data = json.loads(response.content)
-    for roster in json_data:
+    for roster in response.json():
         keys_dict = {k: roster[k] for k in keys_subset}
         metadata_dict = {k: roster['metadata'][k] for k in metadata_subset}
         settings_dict = {k: roster['settings'][k] for k in settings_subset}
